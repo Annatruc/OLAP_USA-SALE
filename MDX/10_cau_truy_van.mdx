@@ -1,0 +1,104 @@
+﻿//1. Thống kê tổng số giao dịch của tiểu bang LA
+SELECT NON EMPTY { [Measures].[FACT USA Sales Count] } ON COLUMNS, 
+	{[DIM Cust Location].[State].&[LA] } ON ROWS
+	FROM [OLAP USA]
+
+//2. 	Thống kê theo từng tiểu bang có số lượng đơn hàng lớn hơn 2000.
+SELECT
+	NON EMPTY{[Measures].[FACT USA Sales Count]} ON COLUMNS,
+	FILTER(
+		[DIM Cust Location].[State].[State],
+		[Measures].[FACT USA Sales Count] > 2000
+	) ON ROWS
+FROM [OLAP USA];
+
+//3. Thống kê tổng hóa đơn của từng nhóm khách hàng theo tháng trong năm
+SELECT NON EMPTY { [Measures].[FACT USA Sales Count] } ON 0, 
+	NON EMPTY CrossJoin ([DIM Order Date].[Order Month].Children, 
+	[DIM Order Date].[Order Year].Children, 
+	[DIM Item].[Category].Children) ON 1
+FROM [OLAP USA]
+
+//4.	Với mỗi tiểu bang, đưa ra 3 quận có lợi nhuận cao nhất.
+SELECT
+    [Measures].[Sum Total] ON COLUMNS,
+	GENERATE(
+		[DIM Cust Location].[State].CHILDREN,
+		TOPCOUNT(
+			[DIM Cust Location].[State].CURRENTMEMBER * [DIM Cust Location].[County].CHILDREN,
+			3,
+			[Measures].[Sum Total])
+    ) ON ROWS
+FROM [OLAP USA];
+
+//5.	Thống kê trung bình độ tuổi khách hàng đã mua hàng với các sản phẩm có giá lớn hơn 1000 theo năm.
+SELECT
+	NON EMPTY	{[DIM Order Date].[Order Year].[Order Year].MEMBERS} ON COLUMNS,
+	NON EMPTY	{
+		FILTER(
+			[DIM Item].[Price].CHILDREN,
+			[DIM Item].[Price].CurrentMember.MemberValue> 1000
+		)
+	} ON ROWS
+FROM [OLAP USA]
+WHERE [Measures].[Age Avg];
+
+//6.	Cho biết họ tên và giới tính của khách hàng đặt hàng nhiều nhất.
+SELECT
+    [Measures].[Sum Qty Ordered] ON COLUMNS,
+    NON EMPTY
+        [DIM Customer].[Gender].[Gender].MEMBERS *
+        TOPCOUNT(
+            [DIM Customer].[Full Name].CHILDREN,
+            1,
+            [Measures].[Sum Qty Ordered]
+        ) ON ROWS
+FROM [OLAP USA];
+
+//7.	Thống kê số lượng đơn hàng ở các tiểu bang Texas (TX), Florida (FL), Los Angeles (LA), New York (NY) trong năm 2020.
+SELECT
+	NON EMPTY	{[DIM Cust Location].[State].[TX],
+				[DIM Cust Location].[State].[FL],
+				[DIM Cust Location].[State].[LA],
+				[DIM Cust Location].[State].[NY]} ON ROWS,
+	NON EMPTY	{[Measures].[Count Item]} ON COLUMNS
+FROM [OLAP USA]
+WHERE [DIM Order Date].[Order Year].[2020];
+
+//8.	Với top 10 loại sản phẩm bán chạy nhất, thống kê số lượng sản phẩm bán ra từng năm của 10 loại sản phẩm đó.
+SELECT
+	NON EMPTY	{[DIM Order Date].[Order Year].[Order Year].MEMBERS} ON COLUMNS,
+	NON EMPTY	{TOPCOUNT([DIM Item].[Category].[Category],
+						10,
+						[Measures].[Count Item]
+				)} ON ROWS
+FROM [OLAP USA]	
+WHERE [Measures].[Count Item];
+
+//9.	Với mỗi loại sản phẩm, liệt kê top 2 sản phẩm có lượt đặt hàng cao nhất, sắp xếp theo thứ tự lượt đặt hàng giảm dần.
+SELECT [Measures].[Sum Qty Ordered] ON COLUMNS,
+	NON EMPTY GENERATE(
+		[DIM Item].[Category].[Category],
+		ORDER(
+			TOPCOUNT(
+					[DIM Item].[Category].CURRENTMEMBER * [DIM Item].[Item Id].[Item Id],
+					2,
+					[Measures].[Sum Qty Ordered]),
+			[Measures].[Sum Qty Ordered],
+			DESC)) ON ROWS
+FROM [OLAP USA];
+
+//10.	Thống kê số lượng khách hàng tại các thành phố ở khu vực phía Nam (South) theo từng năm trừ thành phố Vinson và Graham.
+SELECT 
+	[Measures].[Count Customer] ON COLUMNS,
+    NON EMPTY
+    EXCEPT(
+        [DIM Cust Location].[City].[City].MEMBERS,
+        {
+            [DIM Cust Location].[City].&[Vinson],
+            [DIM Cust Location].[City].&[Graham]
+        }
+    ) * [DIM Order Date].[Order Year].[Order Year].MEMBERS ON ROWS
+FROM [OLAP USA]
+WHERE [DIM Cust Location].[Region].&[South];
+				
