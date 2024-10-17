@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<DTS:ConnectionManager xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:ObjectName="LAPTOP-ILLQ2JQQ_ANATRUC.OLAP_USA"
+  DTS:DTSID="{4C3C2B34-B69B-438C-B612-E5CD1C1CFA6C}"
+  DTS:CreationName="OLEDB">
+  <DTS:ObjectData>
+    <DTS:ConnectionManager
+      DTS:ConnectRetryCount="1"
+      DTS:ConnectRetryInterval="5"
+      DTS:ConnectionString="Data Source=LAPTOP-ILLQ2JQQ\ANATRUC;Initial Catalog=OLAP_USA;Provider=SQLOLEDB.1;Integrated Security=SSPI;Auto Translate=False;Application Name=SSIS-OLAP_SSIS-{4C3C2B34-B69B-438C-B612-E5CD1C1CFA6C}LAPTOP-ILLQ2JQQ\ANATRUC.OLAP_USA;" />
+  </DTS:ObjectData>
+</DTS:ConnectionManager>
